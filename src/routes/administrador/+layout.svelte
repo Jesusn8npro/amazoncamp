@@ -1,6 +1,6 @@
 <script>
-  import SidebarAdmin from '$lib/components/admin/SidebarAdmin.svelte';
-  import HeaderAdmin from '$lib/components/admin/HeaderAdmin.svelte';
+  import SidebarAdmin from '$lib/components/Admin/SidebarAdmin.svelte';
+  import HeaderAdmin from '$lib/components/Admin/HeaderAdmin.svelte';
 </script>
 
 <div class="admin-layout">
