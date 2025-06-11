@@ -2,6 +2,25 @@
   import SidebarAdmin from '$lib/components/Admin/SidebarAdmin.svelte';
   import HeaderAdmin from '$lib/components/Admin/HeaderAdmin.svelte';
   import BottomNavAdmin from '$lib/components/Admin/BottomNavAdmin.svelte';
+  import { supabase } from '../../supabaseClient.js';
+  import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
+
+  onMount(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      goto('/'); // No logueado
+      return;
+    }
+    const { data: perfil, error } = await supabase
+      .from('perfiles')
+      .select('rol')
+      .eq('id', user.id)
+      .single();
+    if (error || !perfil || perfil.rol !== 'administrador') {
+      goto('/'); // No es admin
+    }
+  });
 </script>
 
 <div class="admin-layout">

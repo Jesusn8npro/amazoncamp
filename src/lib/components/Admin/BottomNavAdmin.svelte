@@ -27,9 +27,13 @@
   function irARuta(ruta) {
     goto(ruta);
   }
+  import { createEventDispatcher } from 'svelte';
+  const dispatch = createEventDispatcher();
   function nuevoPaquete() {
-    // Redirige a crear nuevo paquete
-    goto('/administrador/paquetes/nuevo');
+    goto('/administrador/paquetes');
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('abrirModalNuevoPaquete'));
+    }, 120);
   }
 </script>
 

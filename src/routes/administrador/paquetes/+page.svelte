@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import TablaPaquetesModerna from '$lib/components/Admin/Paquetes/TablaPaquetesModerna.svelte';
   import FormularioPaqueteWizard from '$lib/components/Admin/Paquetes/FormularioPaqueteWizard.svelte';
+  import BottomNavAdmin from '$lib/components/Admin/BottomNavAdmin.svelte';
   import { supabase } from '$lib/../supabaseClient.js';
   
 
@@ -43,6 +44,12 @@
 
   onMount(() => {
     cargarPaquetes();
+    window.addEventListener('abrirModalNuevoPaquete', nuevoPaquete);
+  });
+  // Limpia el listener al destruir
+  import { onDestroy } from 'svelte';
+  onDestroy(() => {
+    window.removeEventListener('abrirModalNuevoPaquete', nuevoPaquete);
   });
 </script>
 
@@ -77,6 +84,7 @@
       on:eliminado={(event) => eliminarLocalmente(event.detail)}
     />
   {/if}
+  <BottomNavAdmin on:nuevopaquete={nuevoPaquete} />
 </section>
 
 <style>

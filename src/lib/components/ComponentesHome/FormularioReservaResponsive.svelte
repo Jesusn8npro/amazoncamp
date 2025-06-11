@@ -325,20 +325,33 @@ input:focus, select:focus {
     transform: none;
     top: unset;
     left: unset;
-    max-width: 100%;
-    padding: 0.7rem 0.1rem 0.7rem 0.1rem;
-    border-radius: 0.7rem;
-    box-shadow: 0 1px 8px #0001;
+    max-width: 100vw;
+    width: 100vw;
+    min-width: 0;
+    margin: 0 -8px;
+    padding: 15px;
+    border-radius: 0;
+    box-shadow: none;
   }
   .formulario-grid {
     grid-template-columns: 1fr;
     gap: 0.7rem;
-    padding: 30px;
-    margin: 10px;
+    padding: 0 8px;
+    margin: 0;
+    width: 100vw;
+    min-width: 0;
+    box-sizing: border-box;
   }
   .btn-reserva {
     font-size: 1em;
     padding: 0.8rem 0.2rem;
+    border-radius: 0.7rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .grupo-form {
+    min-width: 0;
+    width: 100%;
   }
 }
 </style>

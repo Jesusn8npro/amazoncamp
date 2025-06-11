@@ -28,6 +28,7 @@ let submenuTimeout = null;
     { nombre: 'Trekking en la Selva', href: '/experiencias/trekking' }
   ] },
   { nombre: 'Blog', href: '/blog' },
+  { nombre: 'Cotización', href: '/cotizacion' },
   { nombre: 'Contacto', href: '/contacto' }
 ];
 

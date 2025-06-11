@@ -190,18 +190,21 @@ input[type="number"] {
 @media (max-width: 900px) {
   .contenedor {
     flex-direction: column;
-    gap: 32px;
-    padding: 24px 50px 18px 50px;
+    gap: 12px;
+    padding: 10px 7px 7px 7px;
+    box-sizing: border-box;
   }
   .info-izq {
-    padding: 50px;
-    margin-bottom: 18px;
+    padding: 0;
+    margin-bottom: 14px;
     text-align: center;
   }
   .form-der {
     max-width: 100%;
     width: 100%;
     margin-top: 0;
+    padding: 20px;
+    box-sizing: border-box;
   }
 }
 @keyframes pop-in {

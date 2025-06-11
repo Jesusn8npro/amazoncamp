@@ -226,16 +226,17 @@
 <style>
   .wizard-container {
     max-width: 700px;
-    margin: 40px auto 0 auto;
+    margin: 0 auto;
     background: #fff;
     border-radius: 18px;
     box-shadow: 0 4px 32px rgba(24, 224, 233, 0.10), 0 2px 16px #0001;
-    padding: 2.5rem 2.5rem 2rem 2.5rem;
+    padding: 1.2rem 1.1rem 1.2rem 1.1rem;
     position: relative;
     min-height: 0;
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    width: 100%;
   }
   .wizard-close {
     position: absolute;
@@ -288,15 +289,47 @@
   }
 
   @media (max-width: 600px) {
-    .wizard-fields {
-      padding-left: 0.7rem;
-      padding-right: 0.7rem;
-    }
+  .wizard-container {
+    padding: 18px 3vw 18px 3vw;
+    border-radius: 0.9rem;
+    max-width: 100vw;
+    margin: 0px;
+    min-width: 0;
+    box-sizing: border-box;
+    font-size: 1.13em;
+  }
+  .wizard-steps {
+    font-size: 1.12em;
+    margin-bottom: 2.2rem;
+  }
+  .wizard-fields,
+  .wizard-fields label {
+    font-size: 1.09em;
+  }
+  .wizard-fields label {
+    margin-bottom: 1.5rem;
+    display: block;
   }
   .wizard-fields input,
   .wizard-fields textarea {
+    font-size: 1.11em;
+    padding: 1.18em 1em;
+    border-radius: 13px;
+    width: 100%;
+    min-height: 2.8em;
+    margin-top: 0.22em;
+  }
+  .wizard-actions button {
+    font-size: 1.09em;
+    padding: 1.13em 2.6em;
+    border-radius: 13px;
+  }
+}
+
+  .wizard-fields input,
+  .wizard-fields textarea {
     margin-top: 0.45rem;
-    padding: 0.85rem 1rem;
+    padding: 20px;
     border-radius: 10px;
     border: 1.5px solid #e0e0e0;
     font-size: 1em;
@@ -368,20 +401,17 @@
   @media (max-width: 900px) {
     .wizard-container {
       max-width: 95vw;
-      padding: 1.3rem 0.3rem 1.3rem 0.3rem;
-    }
   }
-  @media (max-width: 600px) {
-    .wizard-container {
-      max-width: 99vw;
-      padding: 0.5rem 0.1rem 1.1rem 0.1rem;
-      border-radius: 0.9rem;
-    }
-    .wizard-steps {
-      font-size: 0.98em;
-      gap: 0.2rem;
-      margin-bottom: 1.2rem;
-    }
+  .wizard-fields input:focus,
+  .wizard-fields textarea:focus {
+    border-color: #18e0e9;
+    background: #f0fcff;
+  }
+  .wizard-fields .text-red-500 {
+    margin-top: 0.3rem;
+    font-size: 0.93em;
+    color: #e53e3e;
+    font-weight: 500;
   }
 </style>
 

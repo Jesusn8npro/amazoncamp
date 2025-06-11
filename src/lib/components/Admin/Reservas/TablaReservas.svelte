@@ -262,13 +262,8 @@ onMount(cargarReservas);
 /* --- MOBILE EDIT FORM --- */
 .edit-panel-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.2rem;
-  background: #f4fcff;
-  border-radius: 14px;
-  box-shadow: 0 2px 12px #0001;
-  padding: 2rem 1.5rem 1.5rem 1.5rem;
-  margin: 0.5rem 0;
+  grid-template-columns: 1fr 1fr; /* 2 columnas en escritorio */
+  gap: 1em;
 }
 
 @media (min-width: 900px) {
