@@ -413,6 +413,7 @@
     color: #e53e3e;
     font-weight: 500;
   }
+}
 </style>
 
 <div class="wizard-container">
