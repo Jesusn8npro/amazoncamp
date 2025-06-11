@@ -83,28 +83,120 @@
       </nav>
     {/if}
   </div>
+  <!-- Render HTML del artículo sin contenedor extra -->
 </section>
 
 <style>
-.hero-articulo {
-  display: flex;
-  flex-direction: column;
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 8px 32px rgba(44,85,48,0.09);
-  overflow: hidden;
-  margin-bottom: 32px;
-  position: relative;
+:global(h1),
+:global(h2),
+:global(h3),
+:global(p),
+:global(ul),
+:global(ol),
+:global(li),
+:global(blockquote),
+:global(img),
+:global(pre),
+:global(code),
+:global(strong),
+:global(b) {
+  font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+  color: #232323;
+  font-size: 1.09rem;
+  line-height: 1.75;
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+}
+:global(h1) {
+  font-size: 2.1rem;
+  font-weight: 800;
+  border-bottom: 2.5px solid #13b67a22;
+  padding-bottom: 0.18em;
+}
+:global(h2) {
+  font-size: 1.5rem;
+  font-weight: 800;
+  border-bottom: 2px solid #13b67a22;
+  padding-bottom: 0.13em;
+}
+:global(h3) {
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #1976d2;
+}
+:global(strong),
+:global(b) {
+  font-weight: bold;
+  color: #222;
+}
+:global(p) {
+  margin-bottom: 1.1em;
+}
+:global(ul) {
+  margin-left: 2em;
+  margin-bottom: 1.1em;
+  padding-left: 1.2em;
+  list-style-type: disc;
+  list-style-position: inside;
+}
+:global(ul li)::marker {
+  color: #13b67a;
+  font-size: 1.15em;
+}
+:global(ol) {
+  margin-left: 2em;
+  margin-bottom: 1.1em;
+  padding-left: 1.2em;
+  list-style-type: decimal;
+  list-style-position: inside;
+}
+:global(ol li)::marker {
+  color: #1976d2;
+  font-size: 1.1em;
+}
+:global(li) {
+  margin-bottom: 0.45em;
+}
+:global(blockquote) {
+  border-left: 4px solid #b6e7a0;
+  background: #f8fff3;
+  margin: 1.2em 0;
+  padding: 0.9em 1.3em;
+  color: #3a5c3c;
+  font-style: italic;
+  border-radius: 0 14px 14px 0;
+}
+:global(img) {
+  display: block;
+  margin: 20px auto;
+  max-width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px #0001;
+}
+:global(pre) {
+  background: #f4fcff;
+  border-radius: 7px;
+  padding: 1em;
+  overflow-x: auto;
+  margin-bottom: 1.2em;
+}
+:global(code) {
+  background: #eafbe6;
+  border-radius: 4px;
+  padding: 0.15em 0.5em;
+  font-size: 0.97em;
 }
 .hero-imagen {
   display: block;
-  margin: 0 auto;
   width: 100%;
-  max-width: 720px;
-  max-height: 340px;
-  object-fit: cover;
+  height: 400px;
   border-radius: 22px 22px 0 0;
+  object-fit: cover;
   box-shadow: 0 4px 18px rgba(44,85,48,0.13);
+  max-width: none;
+  max-height: none;
 }
 .hero-contenido {
   padding: 36px 32px 22px 32px;

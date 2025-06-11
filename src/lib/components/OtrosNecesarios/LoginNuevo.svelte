@@ -36,14 +36,21 @@
           .eq('id', user.id)
           .single();
         if (perfilError) {
+          console.log('Login failed, closing modal');
           error = 'No se pudo obtener el perfil';
           dispatch('close');
         } else if (perfil.rol === 'administrador') {
-          goto('/administrador/paquetes');
+          console.log('Login success, closing modal (admin)');
+          dispatch('close');
+          setTimeout(() => {
+            goto('/administrador/paquetes');
+          }, 150);
         } else {
+          console.log('Login success, closing modal (user)');
           dispatch('close');
         }
       } else {
+        console.log('Login failed, closing modal');
         dispatch('close');
       }
     }
@@ -198,11 +205,11 @@
     align-items: center;
     justify-content: center;
     background: rgba(30,30,40,0.25);
-    backdrop-filter: blur(6px);
+    backdrop-filter: blur(5px);
     animation: fadeInBg 0.5s;
   }
   .modal-box {
-    background: rgba(255,255,255,0.15);
+    background: rgba(164, 157, 157, 0.54);
     border-radius: 1.2rem;
     box-shadow: 0 8px 40px #0007;
     padding: 2.5rem 2.2rem 2.2rem 2.2rem;

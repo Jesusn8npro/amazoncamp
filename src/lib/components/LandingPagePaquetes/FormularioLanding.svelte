@@ -28,6 +28,7 @@
   let cantidadAdultos = adultos;
   let cantidadNinos = ninos;
   let cantidadParejas = parejas;
+  let cantidadDias = 1; // Nuevo: cantidad de días de estadía
 
   // Selector de paquete
   let mostrarSelectorPaquete = false;
@@ -87,12 +88,30 @@ let paqueteSeleccionado = slug;
 
   // Paso 2: Cliente
   let nombreCliente = '';
-  let emailCliente = '';
-  let telefonoCliente = '';
+let emailCliente = '';
+let prefijoWhatsapp = '+51'; // Perú por defecto
+let whatsappCliente = '';
 
-  // Paso 3: Resumen
-  $: precioTotal = (cantidadAdultos * precioAdulto) + (cantidadNinos * precioNino) + (cantidadParejas * precioPareja);
-$: console.log('Cálculo precio total:', {cantidadAdultos, cantidadNinos, cantidadParejas, precioAdulto, precioNino, precioPareja, precioTotal});
+// Limpia el número: solo dígitos
+function limpiarNumero(numero) {
+  return (numero || '').replace(/\D/g, '');
+}
+
+const prefijos = [
+  { code: '+51', country: '🇵🇪 Perú' },
+  { code: '+57', country: '🇨🇴 Colombia' },
+  { code: '+58', country: '🇻🇪 Venezuela' },
+  { code: '+52', country: '🇲🇽 México' },
+  { code: '+54', country: '🇦🇷 Argentina' },
+  { code: '+34', country: '🇪🇸 España' },
+  { code: '+1', country: '🇺🇸 USA' },
+  // Agrega los que necesites
+];
+
+// Paso 3: Resumen
+$: subtotal = (cantidadAdultos * precioAdulto) + (cantidadNinos * precioNino) + (cantidadParejas * precioPareja);
+$: precioTotal = subtotal * cantidadDias;
+$: console.log('Cálculo precio total:', {cantidadAdultos, cantidadNinos, cantidadParejas, precioAdulto, precioNino, precioPareja, cantidadDias, subtotal, precioTotal});
 
   // Validación de precios
   $: preciosInvalidos = (precioAdulto === 0 && precioNino === 0 && precioPareja === 0);
@@ -104,8 +123,12 @@ $: console.log('Cálculo precio total:', {cantidadAdultos, cantidadNinos, cantid
       error = 'Por favor completa la fecha y al menos 1 adulto';
       return;
     }
-    if (paso === 2 && (!nombreCliente || !emailCliente || !telefonoCliente)) {
-      error = 'Por favor completa todos los datos personales';
+    if (paso === 2 && (!nombreCliente || !emailCliente || !whatsappCliente)) {
+      error = 'Por favor completa todos los datos personales, incluido WhatsApp';
+      return;
+    }
+    if (paso === 2 && limpiarNumero(whatsappCliente).length < 7) {
+      error = 'El número de WhatsApp debe tener al menos 7 dígitos';
       return;
     }
     error = '';
@@ -133,13 +156,10 @@ $: console.log('Cálculo precio total:', {cantidadAdultos, cantidadNinos, cantid
       // Prepara los datos de la reserva según la tabla Supabase
       const reserva = {
         paquete_id,
-        fecha_reserva: fecha,
-        cantidad_adultos: Number(cantidadAdultos) || 0,
-        cantidad_ninos: Number(cantidadNinos) || 0,
-        cantidad_parejas: Number(cantidadParejas) || 0,
         nombre_cliente: nombreCliente,
         email_cliente: emailCliente,
-        telefono_cliente: telefonoCliente,
+        whatsapp: `${prefijoWhatsapp}${limpiarNumero(whatsappCliente)}`,
+        fecha_reserva: fecha,
         estado: 'pendiente',
         precio_adulto: Number(precioAdulto) || 0,
         precio_nino: Number(precioNino) || 0,
@@ -147,25 +167,47 @@ $: console.log('Cálculo precio total:', {cantidadAdultos, cantidadNinos, cantid
         precio_total: total,
         monto_anticipo,
         monto_pendiente,
-        porcentaje_anticipo
+        porcentaje_anticipo,
+        cantidad_adultos: Number(cantidadAdultos) || 0,
+        cantidad_ninos: Number(cantidadNinos) || 0,
+        cantidad_parejas: Number(cantidadParejas) || 0,
+        cantidad_dias: Number(cantidadDias) || 1
       };
-      // Limpia los campos undefined o nulos
+      // Limpia los campos undefined o nulos SOLO UNA VEZ
       Object.keys(reserva).forEach(key => {
         if (reserva[key] === undefined || reserva[key] === null || reserva[key] === '') delete reserva[key];
       });
-      console.log('Reserva a enviar (mapeo exacto tabla reservas):', reserva);
-      // Limpia los campos undefined
-      Object.keys(reserva).forEach(key => {
-        if (reserva[key] === undefined) delete reserva[key];
-      });
-      console.log('Reserva a enviar:', reserva);
+      console.log('Reserva a guardar y enviar:', reserva);
+      // Guarda en Supabase
       const { data, error: errorSupabase } = await supabase.from('reservas').insert([reserva]);
       if (errorSupabase) {
         error = 'No se pudo registrar la reserva. Intenta nuevamente.';
         console.error('Error al registrar reserva:', errorSupabase);
-      } else {
-        exito = '¡Reserva registrada con éxito! Pronto nos pondremos en contacto.';
+        cargando = false;
+        return;
+      }
+      // ENVÍA AL WEBHOOK N8N Y ESPERA RESPUESTA
+      try {
+        console.log('Enviando reserva al webhook:', reserva);
+        const respWebhook = await fetch('https://velostrategix-n8n.lnrubg.easypanel.host/webhook/amazon-registro', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(reserva)
+        });
+        if (!respWebhook.ok) {
+          const texto = await respWebhook.text();
+          error = 'Reserva guardada, pero hubo un error al notificar el webhook: ' + texto;
+          console.error('Error al enviar al webhook:', texto);
+          cargando = false;
+          return;
+        }
+        exito = '¡Reserva registrada y notificada con éxito!';
         dispatch('success');
+      } catch (e) {
+        error = 'Reserva guardada, pero hubo un error al notificar el webhook.';
+        console.error('Excepción al enviar al webhook:', e);
+        cargando = false;
+        return;
       }
     } catch (e) {
       error = 'Ocurrió un error inesperado.';
@@ -175,8 +217,9 @@ $: console.log('Cálculo precio total:', {cantidadAdultos, cantidadNinos, cantid
   }
 
   function reservarWhatsapp() {
-    const mensaje = encodeURIComponent(`Hola, quiero reservar el paquete ${tituloPaquete} para la fecha ${fecha} con ${cantidadAdultos} adulto(s), ${cantidadNinos} niño(s), ${cantidadParejas} pareja(s). Mis datos: ${nombreCliente}, ${emailCliente}, ${telefonoCliente}`);
-    window.open(`https://wa.me/51999999999?text=${mensaje}`,'_blank');
+    const numero = `${prefijoWhatsapp.replace('+','')}${limpiarNumero(whatsappCliente)}`;
+    const mensaje = encodeURIComponent(`Hola, quiero reservar el paquete ${tituloPaquete} para la fecha ${fecha} con ${cantidadAdultos} adulto(s), ${cantidadNinos} niño(s), ${cantidadParejas} pareja(s). Mis datos: ${nombreCliente}, ${emailCliente}, WhatsApp: ${prefijoWhatsapp} ${limpiarNumero(whatsappCliente)}`);
+    window.open(`https://wa.me/${numero}?text=${mensaje}`,'_blank');
   }
 
   
@@ -200,19 +243,17 @@ $: console.log('Cálculo precio total:', {cantidadAdultos, cantidadNinos, cantid
       {#if !mostrarSelectorPaquete}
         <button type="button" class="btn-cambiar-paquete" on:click={() => mostrarSelectorPaquete = true}>¿Quieres elegir otra experiencia?</button>
       {/if}
-      <label>Fecha de inicio</label>
-      <input type="date" bind:value={fecha} required />
-      <label>Personas</label>
-      <!-- Aquí va el selector de personas (adultos, niños, parejas) -->
-      <div class="precio-total">
-        <span>Precio aproximado:</span>
-        <span style="color: #13b67a; font-weight: bold;">{precioTotal.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</span>
-      </div>
-      {#if preciosInvalidos}
-        <div class="mensaje-error" style="margin-bottom: 10px;">
-          Este paquete no tiene precios configurados. Por favor, contacta a Amazon Camp o selecciona otra experiencia.
+      <div class="fila-fecha-dias">
+        <div class="campo-fecha">
+          <label for="fecha-inicio">Fecha de inicio</label>
+          <input id="fecha-inicio" type="date" bind:value={fecha} required class="input-fecha" />
         </div>
-      {/if}
+        <div class="campo-dias">
+          <label for="dias-estadia">Días de estadía</label>
+          <input id="dias-estadia" type="number" min="1" bind:value={cantidadDias} class="input-dias" required />
+        </div>
+      </div>
+
       {#if mostrarSelectorPaquete}
         {#if loadingPaquetes}
           <div class="input-fijo">Cargando experiencias...</div>
@@ -228,35 +269,48 @@ $: console.log('Cálculo precio total:', {cantidadAdultos, cantidadNinos, cantid
           <button type="button" class="btn-ir-paquete" on:click={redirigirPaquete}>Ir a experiencia seleccionada</button>
         {/if}
       {/if}
-      <label>Fecha de inicio</label>
-      <input type="date" bind:value={fecha} required />
-      <label>Personas</label>
-      <div class="fila-numeros">
-        <div>
-          <label>Adultos <span style="color:#888;font-weight:400">(13+ años)</span></label>
-          <div class="controles">
-            <button type="button" on:click={() => cantidadAdultos = Math.max(1, cantidadAdultos - 1)} disabled={cantidadAdultos <= 1}>-</button>
-            <span>{cantidadAdultos}</span>
-            <button type="button" on:click={() => cantidadAdultos++}>+</button>
+      <div class="grupo-estadia-personas">
+        <div class="texto-total-dias" style="text-align: center; font-weight: bold; color: #13b67a; margin-bottom: 10px; font-size: 1em;">El precio total se calculará por la cantidad de días seleccionados.</div>
+        <fieldset class="campo-personas">
+          <legend>Personas</legend>
+          <div class="fila-numeros">
+            <div>
+              <label>Adultos <span>(13+ años)</span></label>
+              <div class="controles">
+                <button type="button" on:click={() => cantidadAdultos = Math.max(0, cantidadAdultos - 1)}>-</button>
+                <span>{cantidadAdultos}</span>
+                <button type="button" on:click={() => cantidadAdultos++}>+</button>
+              </div>
+            </div>
+            <div>
+              <label>Niños <span>(2-12 años)</span></label>
+              <div class="controles">
+                <button type="button" on:click={() => cantidadNinos = Math.max(0, cantidadNinos - 1)}>-</button>
+                <span>{cantidadNinos}</span>
+                <button type="button" on:click={() => cantidadNinos++}>+</button>
+              </div>
+            </div>
+            <div>
+              <label>Parejas <span>(2 adultos)</span></label>
+              <div class="controles">
+                <button type="button" on:click={() => cantidadParejas = Math.max(0, cantidadParejas - 1)}>-</button>
+                <span>{cantidadParejas}</span>
+                <button type="button" on:click={() => cantidadParejas++}>+</button>
+              </div>
+            </div>
           </div>
-        </div>
-        <div>
-          <label>Niños <span style="color:#888;font-weight:400">(2-12 años)</span></label>
-          <div class="controles">
-            <button type="button" on:click={() => cantidadNinos = Math.max(0, cantidadNinos - 1)} disabled={cantidadNinos <= 0}>-</button>
-            <span>{cantidadNinos}</span>
-            <button type="button" on:click={() => cantidadNinos++}>+</button>
-          </div>
-        </div>
-        <div>
-          <label>Parejas <span style="color:#888;font-weight:400">(2 adultos)</span></label>
-          <div class="controles">
-            <button type="button" on:click={() => cantidadParejas = Math.max(0, cantidadParejas - 1)} disabled={cantidadParejas <= 0}>-</button>
-            <span>{cantidadParejas}</span>
-            <button type="button" on:click={() => cantidadParejas++}>+</button>
-          </div>
-        </div>
+        </fieldset>
       </div>
+      <div class="precio-total">
+        <span>Precio aproximado:</span>
+        <span style="color: #13b67a; font-weight: bold;">{precioTotal.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</span>
+      </div>
+      {#if preciosInvalidos}
+        <div class="mensaje-error" style="margin-bottom: 10px;">
+          Este paquete no tiene precios configurados. Por favor, contacta a Amazon Camp o selecciona otra experiencia.
+        </div>
+      {/if}
+
       {#if error}
         <div class="mensaje-error">{error}</div>
       {/if}
@@ -278,8 +332,16 @@ $: console.log('Cálculo precio total:', {cantidadAdultos, cantidadNinos, cantid
       <input type="text" bind:value={nombreCliente} required />
       <label>Correo electrónico</label>
       <input type="email" bind:value={emailCliente} required />
-      <label>Teléfono</label>
-      <input type="tel" bind:value={telefonoCliente} required />
+      <label for="input-whatsapp">WhatsApp</label>
+      <div class="input-whatsapp-group">
+        <select bind:value={prefijoWhatsapp} class="input-prefijo" required>
+          {#each prefijos as pref}
+            <option value={pref.code}>{pref.country} {pref.code}</option>
+          {/each}
+        </select>
+        <input id="input-whatsapp" type="tel" bind:value={whatsappCliente} required maxlength="15" inputmode="numeric" pattern="[0-9]*" placeholder="Ej: 3123456789" class="input-whatsapp" on:input={(e) => whatsappCliente = limpiarNumero(e.target.value)} />
+      </div>
+      <div class="ayuda-numero">Ejemplo: 3123456789 (sin espacios ni símbolos)</div>
       {#if error}
         <div class="mensaje-error">{error}</div>
       {/if}
@@ -301,15 +363,20 @@ $: console.log('Cálculo precio total:', {cantidadAdultos, cantidadNinos, cantid
       <div class="resumen">
         <b>Paquete:</b> {tituloPaquete}<br />
         <b>Fecha:</b> {fecha}<br />
+        <b>Días de estadía:</b> {cantidadDias}<br />
         <b>Adultos:</b> {cantidadAdultos} | <b>Niños:</b> {cantidadNinos} | <b>Parejas:</b> {cantidadParejas}<br />
         <b>Nombre:</b> {nombreCliente}<br />
         <b>Email:</b> {emailCliente}<br />
-        <b>Teléfono:</b> {telefonoCliente}<br />
+        <b>WhatsApp:</b> {prefijoWhatsapp} {limpiarNumero(whatsappCliente)}<br />
         <b>Total estimado:</b> S/ {precioTotal.toFixed(2)}
       </div>
       <div class="opciones-finales">
         <button type="button" class="btn-pago" disabled>Anticipar 20% (Próximamente)</button>
         <button type="button" class="btn-wa" on:click={reservarWhatsapp}>Reservar por WhatsApp</button>
+      </div>
+      <div class="precio-total">
+        <span>Precio aproximado:</span>
+        <span style="color: #13b67a; font-weight: bold;">{precioTotal.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</span>
       </div>
       <div class="botones-multistep">
         <button type="button" class="btn-anterior" on:click={pasoAnterior}>Anterior</button>
@@ -328,7 +395,7 @@ $: console.log('Cálculo precio total:', {cantidadAdultos, cantidadNinos, cantid
 <style>
 .formulario-multistep {
   width: 100%;
-  max-width: 420px;
+  max-width: 500px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -463,15 +530,49 @@ input[type="date"],
 input[type="number"],
 input[type="text"],
 input[type="email"],
-input[type="tel"] {
+.input-whatsapp-group {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.input-prefijo {
+  min-width: 92px;
+  padding: 10px 7px;
+  border-radius: 7px 0 0 7px;
   border: 1.8px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 12px 15px;
-  font-size: 1.04rem;
-  margin-top: 3px;
-  transition: border 0.2s, box-shadow 0.2s;
-  outline: none;
   background: #f8fafc;
+  font-size: 1.01rem;
+  color: #0a3b4e;
+}
+.input-whatsapp {
+  flex: 1;
+  padding: 12px 15px;
+  border: 1.8px solid #e5e7eb;
+  border-radius: 0 8px 8px 0;
+  font-size: 1.04rem;
+  background: #f8fafc;
+  outline: none;
+}
+.input-prefijo:focus, .input-whatsapp:focus {
+  border: 2px solid #ea580c;
+  box-shadow: 0 0 0 2px #ea580c33;
+}
+@media (max-width: 600px) {
+  .input-whatsapp-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+  .input-prefijo, .input-whatsapp {
+    border-radius: 7px;
+  }
+}
+.ayuda-numero {
+  font-size: 0.93em;
+  color: #888;
+  margin-bottom: 8px;
+  margin-left: 2px;
 }
 input:focus {
   border: 2px solid #ea580c;
@@ -612,4 +713,128 @@ input:focus {
   font-weight: 700;
   margin-top: 7px;
 }
+.fila-fecha-dias {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+  align-items: flex-end;
+}
+@media (max-width: 600px) {
+  .fila-fecha-dias {
+    flex-direction: column;
+    gap: 0;
+  }
+  .campo-fecha, .campo-dias {
+    width: 100%;
+    margin-bottom: 7px;
+    padding-left: 0;
+    padding-right: 0;
+    box-sizing: border-box;
+  }
+}
+
+.campo-fecha, .campo-dias {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  background: #f7fafc;
+  border-radius: 7px;
+  padding: 7px 10px 4px 10px;
+  box-shadow: 0 1px 4px 0 #0001;
+  border: 1px solid #ececec;
+  margin-bottom: 0;
+}
+.campo-fecha label, .campo-dias label {
+  font-weight: 500;
+  color: #ea580c;
+  margin-bottom: 3px;
+  letter-spacing: 0.01em;
+  font-size: 0.98em;
+}
+.input-fecha, .input-dias {
+  width: 100%;
+  min-width: 0;
+  border-radius: 5px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  padding: 4px 7px;
+  font-size: 0.98em;
+  transition: border 0.2s;
+  height: 32px;
+}
+.input-fecha:focus, .input-dias:focus {
+  border: 1px solid #ea580c;
+  outline: none;
+}
+@media (max-width: 600px) {
+  .fila-fecha-dias {
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+
+.fila-numeros {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+.fila-numeros > div {
+  background: #f7fafc;
+  border-radius: 8px;
+  box-shadow: 0 1px 5px 0 #0001;
+  padding: 7px 10px 5px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1 1 0;
+  border: 1px solid #ececec;
+  min-width: 0;
+}
+.fila-numeros label {
+  font-weight: 500;
+  color: #ea580c;
+  margin-bottom: 4px;
+  font-size: 0.97em;
+  text-align: center;
+}
+.fila-numeros span {
+  font-size: 1.05em;
+  font-weight: 500;
+  margin: 0 7px;
+}
+.controles {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.controles button {
+  background: #fff;
+  border: 1px solid #ea580c;
+  color: #ea580c;
+  border-radius: 50%;
+  width: 23px;
+  height: 23px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border 0.15s;
+  box-shadow: 0 1px 2px 0 #0001;
+  outline: none;
+  padding: 0;
+}
+.controles button:hover, .controles button:focus {
+  background: #ea580c;
+  color: #fff;
+  border: 1px solid #ea580c;
+}
+@media (max-width: 700px) {
+  .fila-numeros {
+    flex-direction: column;
+    gap: 7px;
+  }
+  .fila-numeros > div {
+    padding: 7px 6px 5px 6px;
+  }
+}
+
 </style>

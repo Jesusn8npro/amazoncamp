@@ -93,6 +93,9 @@
     overflow-x: auto;
     margin-bottom: 2.5rem;
     animation: fadeInUp 1s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   table {
     width: 100%;
@@ -134,7 +137,26 @@
     box-shadow: 0 6px 20px rgba(39,174,96,0.18);
     transform: translateY(-2px) scale(1.04);
   }
+  html, body, #svelte {
+    overflow-x: hidden;
+  }
+  .animate-bounce-slow {
+    animation: bounce 1.7s infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-7px); }
+  }
   @media (max-width: 800px) {
+    body, html, #svelte {
+      overflow-x: hidden !important;
+    }
+    .w-full.flex.flex-col.md\:flex-row {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
     table { min-width: 500px; }
     .intro { font-size: 1.1rem; }
   }
@@ -204,10 +226,31 @@
     from { opacity: 0; transform: scale(0.85); }
     to { opacity: 1; transform: scale(1); }
   }
+  html, body, #svelte {
+    overflow-x: hidden;
+  }
+  .animate-bounce-slow {
+    animation: bounce 1.7s infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-7px); }
+  }
+  @media (max-width: 800px) {
+    body, html, #svelte {
+      overflow-x: hidden !important;
+    }
+    .w-full.flex.flex-col.md\:flex-row {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+  }
 </style>
 
-<div class="w-full flex flex-col items-center mt-6">
-  <h1 class="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-500 via-blue-500 to-green-400 animate-fade-in mb-2 drop-shadow-lg">
+<div class="w-full flex flex-col items-center mt-6 p-6 md:p-10">
+  <h1 class="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-500 via-blue-500 to-green-400 animate-fade-in mb-8 drop-shadow-lg text-center">
     Amazon Camp: ¡Lleva tu negocio al siguiente nivel!
   </h1>
   <p class="text-center max-w-2xl text-lg md:text-xl text-gray-700 mb-8 animate-slide-in">
@@ -217,10 +260,10 @@
   </p>
 </div>
 
-<div class="w-full flex flex-col md:flex-row gap-8 justify-center items-stretch px-2 md:px-0 mb-14 animate-fade-in-up">
+<div class="w-full flex flex-col md:flex-row gap-8 justify-center items-center px-2 md:px-0 mb-14 animate-fade-in-up overflow-x-hidden">
   {#each paquetes as paquete, idx}
-    <div class={`flex-1 rounded-3xl shadow-2xl border-4 border-transparent hover:scale-[1.03] transition-all duration-300 relative flex flex-col p-7 md:p-8 mb-6 md:mb-0 ${idx === 0 ? 'bg-gradient-to-br from-green-50 to-green-200' : idx === 1 ? 'bg-gradient-to-br from-blue-50 to-blue-200' : 'bg-gradient-to-br from-purple-50 to-blue-100'} ${idx === 1 ? 'z-10' : 'z-0'}`}
-         style="min-width: 320px; max-width: 400px;">
+    <div class={`flex-1 rounded-3xl shadow-2xl border-4 border-transparent hover:scale-[1.03] transition-all duration-300 relative flex flex-col p-5 md:p-8 mb-6 md:mb-0 ${idx === 0 ? 'bg-gradient-to-br from-green-50 to-green-200' : idx === 1 ? 'bg-gradient-to-br from-blue-50 to-blue-200' : 'bg-gradient-to-br from-purple-50 to-blue-100'} ${idx === 1 ? 'z-10' : 'z-0'}`}
+         style="min-width: 280px; max-width: 400px;">
       <div class={`absolute top-0 left-0 w-full h-2 rounded-t-3xl ${idx === 0 ? 'bg-gradient-to-r from-green-400 to-green-600' : idx === 1 ? 'bg-gradient-to-r from-blue-400 to-green-400' : 'bg-gradient-to-r from-purple-400 to-blue-600'}`}></div>
       <h2 class={`text-2xl font-bold mb-2 flex items-center gap-2 ${idx === 0 ? 'text-green-700' : idx === 1 ? 'text-blue-700' : 'text-purple-700'}`}> 
         {paquete.nombre}
@@ -228,8 +271,7 @@
           <span class="ml-2 text-xs bg-green-200 text-green-800 rounded px-2 py-0.5 font-semibold animate-pulse">Implementado</span>
         {/if}
       </h2>
-      <div class={`text-xl font-extrabold mb-1 ${idx === 0 ? 'text-green-600' : idx === 1 ? 'text-blue-600' : 'text-purple-700'}`}>{paquete.precio}</div>
-      <div class={`text-base mb-2 ${idx === 0 ? 'text-green-800' : idx === 1 ? 'text-blue-800' : 'text-purple-800'}`}>{paquete.cop}</div>
+      <div class={`text-xl font-extrabold mb-4 ${idx === 0 ? 'text-green-600' : idx === 1 ? 'text-blue-600' : 'text-purple-700'}`}>{paquete.precio}</div>
       <div class="mb-3 text-gray-700 font-medium">{paquete.descripcion}</div>
       <ul class="mb-4 space-y-2">
         {#each paquete.beneficios as beneficio}
@@ -241,23 +283,24 @@
       </ul>
       <div class="mb-3 text-sm text-gray-500">{paquete.mantenimiento}</div>
       <div class={`mb-5 text-xs font-bold rounded-lg p-2 ${idx === 0 ? 'bg-green-100 text-green-700' : idx === 1 ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>{paquete.ideal}</div>
-      <button class={`w-full py-2 mt-auto rounded-full font-bold shadow-md transition-all duration-200 text-lg 
+      <button class={`w-full py-3 mt-auto rounded-full font-extrabold shadow-xl transition-all duration-200 text-xl flex items-center justify-center gap-3 animate-bounce-slow tracking-wide uppercase 
         ${idx === 0 ? 'bg-gradient-to-r from-green-400 to-green-600 text-white hover:from-green-500 hover:to-green-700' : idx === 1 ? 'bg-gradient-to-r from-blue-400 to-green-400 text-white hover:from-blue-500 hover:to-green-500' : 'bg-gradient-to-r from-purple-400 to-blue-600 text-white hover:from-purple-500 hover:to-blue-700'}`}
         on:click={() => abrirModal(idx)}>
-        Más información
+        <span class="animate-pulse drop-shadow-lg">Ver más información</span>
+        <svg class="w-7 h-7 animate-fade-right text-white drop-shadow-xl" fill="currentColor" viewBox="0 0 24 24"><path d="M13.293 17.293a1 1 0 0 1 1.414 0l4-4a1 1 0 0 0 0-1.414l-4-4a1 1 0 1 1 1.414-1.414l4.707 4.707a1 1 0 0 1 0 1.414l-4.707 4.707a1 1 0 0 1-1.414 0z"/><path d="M5 12a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1z"/></svg>
       </button>
     </div>
   {/each}
 </div>
 
+
 <!-- Modal -->
 {#if modalActivo !== null}
-  <div class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 animate-fade-in" on:click={cerrarModal}>
+  <div class="fixed inset-0 z-50 flex items-center justify-center animate-fade-in backdrop-blur-[7px] bg-gradient-to-br from-white/70 via-green-100/60 to-blue-100/60" on:click={cerrarModal}>
     <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-[95vw] max-h-[90vh] overflow-y-auto relative animate-pop-up" on:click|stopPropagation tabindex="0" aria-modal="true" role="dialog">
       <button class="absolute top-4 right-4 text-2xl text-blue-400 hover:text-green-500 transition" on:click={cerrarModal} aria-label="Cerrar modal">&times;</button>
       <h2 class="text-2xl font-bold text-green-700 mb-2">{paquetes[modalActivo].nombre}</h2>
-      <div class="text-xl font-extrabold text-blue-600 mb-1">{paquetes[modalActivo].precio}</div>
-      <div class="text-base text-green-700 mb-2">{paquetes[modalActivo].cop}</div>
+      <div class="text-xl font-extrabold text-blue-600 mb-4">{paquetes[modalActivo].precio}</div>
       <div class="mb-3 text-gray-700 font-medium">{paquetes[modalActivo].descripcion}</div>
       <div class="mb-2 font-bold text-green-700">¿Qué incluye?</div>
       <ul class="mb-4 space-y-2">

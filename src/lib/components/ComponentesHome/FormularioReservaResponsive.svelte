@@ -133,7 +133,7 @@
   margin: 0 auto;
   position: absolute;
   left: 50%;
-  top: 100% ;
+  top:90% ;
   transform: translateX(-50%);
   z-index: 20;
   background: #fff;
@@ -334,6 +334,7 @@ input:focus, select:focus {
     grid-template-columns: 1fr;
     gap: 0.7rem;
     padding: 30px;
+    margin: 10px;
   }
   .btn-reserva {
     font-size: 1em;

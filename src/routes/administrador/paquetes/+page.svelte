@@ -1,8 +1,9 @@
 <script>
   import { onMount } from 'svelte';
-  import TablaPaquetes from '$lib/components/Admin/Paquetes/TablaPaquetes.svelte';
-  import FormularioPaquete from '$lib/components/Admin/Paquetes/FormularioPaquete.svelte';
+  import TablaPaquetesModerna from '$lib/components/Admin/Paquetes/TablaPaquetesModerna.svelte';
+  import FormularioPaqueteWizard from '$lib/components/Admin/Paquetes/FormularioPaqueteWizard.svelte';
   import { supabase } from '$lib/../supabaseClient.js';
+  
 
   let paquetes = [];
   let mostrandoFormulario = false;
@@ -36,6 +37,10 @@
     paqueteEditar = null;
   }
 
+  function eliminarLocalmente(id) {
+    paquetes = paquetes.filter(p => p.id !== id);
+  }
+
   onMount(() => {
     cargarPaquetes();
   });
@@ -43,19 +48,20 @@
 
 <section>
   <div class="header-paquetes">
-  <h1 class="titulo-animado animate-gradient"> 
-  <span class="icono-titulo-fix">🌎</span>
-  <span class="titulo-gradiente">Gestión de Paquetes Turísticos</span>
-</h1>
-  <button class="nuevo-btn boton-animado" on:click={nuevoPaquete}>
-    <span class="icono-btn">➕</span> Nuevo Paquete
-  </button>
-</div>
+    <h1 class="titulo-animado animate-gradient"> 
+      <span class="icono-titulo-fix">🌎</span>
+      <span class="titulo-gradiente">Gestión de Paquetes Turísticos</span>
+    </h1>
+    <button class="nuevo-btn boton-animado" on:click={nuevoPaquete}>
+      <span class="icono-btn">➕</span> Nuevo Paquete
+    </button>
+  </div>
 
   {#if mostrandoFormulario}
-    <FormularioPaquete
-      paquete={paqueteEditar}
+    <FormularioPaqueteWizard
+      {paqueteEditar}
       on:guardado={() => { cargarPaquetes(); cerrarFormulario(); }}
+      on:cerrar={cerrarFormulario}
     />
   {/if}
 
@@ -65,10 +71,10 @@
   {#if loading}
     <p>Cargando paquetes...</p>
   {:else}
-    <TablaPaquetes
+    <TablaPaquetesModerna
       paquetes={paquetes}
       on:editar={(e) => { paqueteEditar = e.detail; mostrandoFormulario = true; }}
-      on:eliminado={cargarPaquetes}
+      on:eliminado={(event) => eliminarLocalmente(event.detail)}
     />
   {/if}
 </section>

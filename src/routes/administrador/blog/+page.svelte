@@ -1,5 +1,5 @@
 <script>
-  import BlogAdminPanel from '$lib/components/Admin/blog/BlogAdminPanel.svelte';
+  import BlogAdminManager from '$lib/components/Admin/blog/BlogAdminManager.svelte';
 </script>
 
-<BlogAdminPanel />
+<BlogAdminManager />

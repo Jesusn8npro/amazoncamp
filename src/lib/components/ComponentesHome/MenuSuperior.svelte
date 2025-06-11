@@ -1,14 +1,23 @@
 <script>
   import LoginNuevo from '../OtrosNecesarios/LoginNuevo.svelte';
   import MenuResponsivo from '../OtrosNecesarios/MenuResponsivo.svelte';
-import { supabase } from '../../../supabaseClient.js';
+  import { afterNavigate } from '$app/navigation';
+  import { supabase } from '../../../supabaseClient.js';
 let menuResponsivoAbierto = false;
+
+// Cierra el menú responsivo automáticamente al navegar
+afterNavigate(() => {
+  menuResponsivoAbierto = false;
+});
   let loginModalAbierto = false;
   import { onMount } from 'svelte';
   let menuLateral = false;
   let idiomaOpen = false;
   let buscarOverlay = false;
   let busqueda = '';
+
+  let submenuOpen = null;
+let submenuTimeout = null;
 
   let navLinks = [
   { nombre: 'Inicio', href: '/' },
@@ -122,14 +131,24 @@ onMount(() => {
     </a>
     <!-- Menú horizontal -->
     <div class="hidden lg:flex items-center gap-6">
-      {#each navLinks as link}
+      {#each navLinks as link, idx}
         {#if link.submenu}
-          <div class="relative group">
+          <div class="relative"
+            on:mouseenter={() => {
+              if (submenuTimeout) clearTimeout(submenuTimeout);
+              submenuOpen = idx;
+            }}
+            on:mouseleave={() => {
+              submenuTimeout = setTimeout(() => submenuOpen = null, 220);
+            }}
+          >
             <button class="flex items-center gap-1 font-semibold text-gray-700 hover:text-orange-500 focus:outline-none">
               {link.nombre}
-              <i class="fas fa-chevron-down text-xs"></i>
+              <i class="fas fa-chevron-down text-xs mt-1"></i>
             </button>
-            <div class="absolute left-0 mt-2 bg-white shadow-lg rounded z-20 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all min-w-[180px]">
+            <div class="absolute left-0 mt-2 bg-white shadow-lg rounded z-20 transition-all min-w-[180px]"
+              style="opacity: {submenuOpen === idx ? 1 : 0}; pointer-events: {submenuOpen === idx ? 'auto' : 'none'};"
+            >
               {#each link.submenu as sub}
                 <a href={sub.href} class="block px-4 py-2 text-gray-700 hover:bg-orange-100 hover:text-orange-600">{sub.nombre}</a>
               {/each}
@@ -158,7 +177,7 @@ onMount(() => {
 </nav>
 
 {#if loginModalAbierto}
-  <LoginNuevo on:close={() => loginModalAbierto = false} />
+  <LoginNuevo on:close={() => { loginModalAbierto = false; console.log('LoginNuevo close event received, modal closed'); }} />
 {/if}
 
 <!-- Menú lateral derecho -->
